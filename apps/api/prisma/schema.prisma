@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPERADMIN
+  USER
+}
+
+enum CenterUserRole {
+  OWNER
+  ADMIN
+  STAFF
+  MEMBER
+}
+
+enum MembershipInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum MembershipStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+}
+
+enum ReservationKind {
+  CLASS
+  SPACE
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CANCELED
+}
+
+enum PaymentProvider {
+  STRIPE
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         UserRole       @default(USER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  centers      CenterUser[]
+  reservations Reservation[]
+  memberships  Membership[]
+  payments     Payment[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Center {
+  id        String      @id @default(uuid())
+  name      String
+  slug      String      @unique
+  timezone  String      @default("UTC")
+  currency  String      @default("usd")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  users       CenterUser[]
+  spaces      Space[]
+  plans       MembershipPlan[]
+  memberships Membership[]
+  reservations Reservation[]
+  payments    Payment[]
+}
+
+model CenterUser {
+  id       String         @id @default(uuid())
+  centerId String
+  userId   String
+  role     CenterUserRole @default(MEMBER)
+  createdAt DateTime      @default(now())
+
+  center Center @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([centerId, userId])
+  @@index([userId])
+  @@index([centerId])
+}
+
+model Space {
+  id        String   @id @default(uuid())
+  centerId  String
+  name      String
+  capacity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  center       Center        @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+
+  @@index([centerId])
+}
+
+model MembershipPlan {
+  id         String             @id @default(uuid())
+  centerId   String
+  name       String
+  priceCents Int
+  currency   String             @default("usd")
+  interval   MembershipInterval
+  isActive   Boolean            @default(true)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  center      Center       @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+
+  @@index([centerId])
+}
+
+model Membership {
+  id        String           @id @default(uuid())
+  centerId  String
+  userId    String
+  planId    String
+  status    MembershipStatus @default(ACTIVE)
+  startedAt DateTime         @default(now())
+  endsAt    DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  center Center         @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan   MembershipPlan @relation(fields: [planId], references: [id])
+
+  @@index([centerId, userId])
+}
+
+model Reservation {
+  id        String            @id @default(uuid())
+  centerId  String
+  userId    String
+  kind      ReservationKind
+  title     String
+  spaceId   String?
+  startAt   DateTime
+  endAt     DateTime
+  status    ReservationStatus @default(CONFIRMED)
+  priceCents Int             @default(0)
+  currency  String           @default("usd")
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  center Center @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space  Space? @relation(fields: [spaceId], references: [id])
+
+  @@index([centerId, startAt])
+  @@index([userId, startAt])
+  @@index([spaceId, startAt])
+}
+
+model Payment {
+  id        String         @id @default(uuid())
+  centerId  String
+  userId    String
+  provider  PaymentProvider
+  status    PaymentStatus  @default(PENDING)
+  amountCents Int
+  currency  String         @default("usd")
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+  metadata  Json?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  center Center @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([centerId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model WebhookEvent {
+  id        String   @id @default(uuid())
+  provider  String
+  eventId   String   @unique
+  payload   Json
+  receivedAt DateTime @default(now())
+}

@@ -26,6 +26,15 @@ function timeRange(startAt: string, endAt: string) {
   return `${start} - ${end}`;
 }
 
+function toLocalDateTimeInputValue(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  return `${y}-${m}-${d}T${hh}:${mm}`;
+}
+
 function buildCalendarMatrix(cursor: Date) {
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -43,7 +52,9 @@ function buildCalendarMatrix(cursor: Date) {
 export default function Reservations() {
   const centerId = getSession()?.centers?.[0]?.id ?? '';
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -51,13 +62,31 @@ export default function Reservations() {
 
   const today = useMemo(() => new Date(), []);
   const [selectedKey, setSelectedKey] = useState(toDayKey(today));
+  const [form, setForm] = useState(() => {
+    const start = new Date();
+    start.setHours(start.getHours() + 1, 0, 0, 0);
+    const end = new Date(start);
+    end.setHours(end.getHours() + 1);
+    return {
+      title: '',
+      kind: 'CLASS' as 'CLASS' | 'SPACE',
+      userId: '',
+      startAt: toLocalDateTimeInputValue(start),
+      endAt: toLocalDateTimeInputValue(end),
+      priceCents: '0',
+      currency: 'clp',
+    };
+  });
+
+  async function loadData() {
+    if (!centerId) return;
+    const [r, u] = await Promise.all([api.reservations(centerId), api.users(centerId)]);
+    setReservations(r.reservations ?? []);
+    setUsers(u.users ?? []);
+  }
 
   useEffect(() => {
-    if (!centerId) return;
-    api
-      .reservations(centerId)
-      .then((r) => setReservations(r.reservations ?? []))
-      .catch((e: any) => setError(e.message ?? 'Error'));
+    loadData().catch((e: any) => setError(e.message ?? 'Error'));
   }, [centerId]);
 
   const reservationsByDay = useMemo(() => {
@@ -78,102 +107,159 @@ export default function Reservations() {
   const selectedReservations = reservationsByDay.get(selectedKey) ?? [];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold text-slate-900">Calendario de reservas</h2>
-        <div className="flex items-center gap-2">
-          <button
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
-          >
-            Anterior
-          </button>
-          <div className="min-w-44 text-center text-sm font-semibold capitalize text-slate-700">{monthLabel(cursor)}</div>
-          <button
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
-          >
-            Siguiente
-          </button>
-        </div>
-      </div>
-
-      {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div> : null}
-
-      <div className="app-card overflow-hidden">
-        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
-          {WEEK_DAYS.map((d) => (
-            <div key={d} className="px-2 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {d}
+    <div className="space-y-5">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="app-card p-4 lg:col-span-1">
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Crear reserva</h3>
+          <div className="space-y-3">
+            <input className="app-input" placeholder="Titulo" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <select className="app-input" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as any })}>
+                <option value="CLASS">CLASS</option>
+                <option value="SPACE">SPACE</option>
+              </select>
+              <select className="app-input" value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })}>
+                <option value="">Usuario actual</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
             </div>
-          ))}
+            <input className="app-input" type="datetime-local" value={form.startAt} onChange={(e) => setForm({ ...form, startAt: e.target.value })} />
+            <input className="app-input" type="datetime-local" value={form.endAt} onChange={(e) => setForm({ ...form, endAt: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <input className="app-input" placeholder="Precio cents" value={form.priceCents} onChange={(e) => setForm({ ...form, priceCents: e.target.value })} />
+              <input className="app-input" placeholder="Moneda" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+            </div>
+            <button
+              className="app-btn-primary w-full"
+              disabled={saving || !form.title || !form.startAt || !form.endAt}
+              onClick={async () => {
+                setError(null);
+                setSaving(true);
+                try {
+                  await api.createReservation({
+                    centerId,
+                    userId: form.userId || undefined,
+                    kind: form.kind,
+                    title: form.title.trim(),
+                    startAt: new Date(form.startAt).toISOString(),
+                    endAt: new Date(form.endAt).toISOString(),
+                    priceCents: Number(form.priceCents || '0'),
+                    currency: form.currency.trim() || undefined,
+                  });
+                  setForm({ ...form, title: '' });
+                  await loadData();
+                } catch (e: any) {
+                  setError(e.message ?? 'No se pudo crear reserva');
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            >
+              {saving ? 'Guardando...' : 'Crear reserva'}
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-7">
-          {days.map((day) => {
-            const key = toDayKey(day);
-            const inMonth = day.getMonth() === cursor.getMonth();
-            const isToday = key === toDayKey(today);
-            const isSelected = key === selectedKey;
-            const count = reservationsByDay.get(key)?.length ?? 0;
-
-            return (
+        <div className="space-y-4 lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-bold text-slate-900">Calendario de reservas</h2>
+            <div className="flex items-center gap-2">
               <button
-                key={key}
-                className={`min-h-24 border-b border-r border-slate-200 p-2 text-left align-top transition ${
-                  isSelected ? 'bg-sky-50' : 'bg-white hover:bg-slate-50'
-                }`}
-                onClick={() => setSelectedKey(key)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
               >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold ${
-                      isToday ? 'bg-slate-900 text-white' : 'text-slate-700'
-                    } ${!inMonth ? 'opacity-40' : ''}`}
-                  >
-                    {day.getDate()}
-                  </span>
-                  {count > 0 ? (
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">{count}</span>
-                  ) : null}
-                </div>
+                Anterior
               </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="app-card p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Detalle del dia</h3>
-          <span className="text-sm font-medium text-slate-700">{selectedKey}</span>
-        </div>
-
-        {selectedReservations.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-sm text-slate-500">
-            No hay reservas para este dia.
+              <div className="min-w-44 text-center text-sm font-semibold capitalize text-slate-700">{monthLabel(cursor)}</div>
+              <button
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {selectedReservations.map((r) => (
-              <div key={r.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-800">{r.title}</div>
-                    <div className="text-xs text-slate-500">{timeRange(r.startAt, r.endAt)}</div>
-                  </div>
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                      r.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                    }`}
-                  >
-                    {r.status}
-                  </span>
+
+          {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div> : null}
+
+          <div className="app-card overflow-hidden">
+            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+              {WEEK_DAYS.map((d) => (
+                <div key={d} className="px-2 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {d}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7">
+              {days.map((day) => {
+                const key = toDayKey(day);
+                const inMonth = day.getMonth() === cursor.getMonth();
+                const isToday = key === toDayKey(today);
+                const isSelected = key === selectedKey;
+                const count = reservationsByDay.get(key)?.length ?? 0;
+
+                return (
+                  <button
+                    key={key}
+                    className={`min-h-24 border-b border-r border-slate-200 p-2 text-left align-top transition ${
+                      isSelected ? 'bg-sky-50' : 'bg-white hover:bg-slate-50'
+                    }`}
+                    onClick={() => setSelectedKey(key)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold ${
+                          isToday ? 'bg-slate-900 text-white' : 'text-slate-700'
+                        } ${!inMonth ? 'opacity-40' : ''}`}
+                      >
+                        {day.getDate()}
+                      </span>
+                      {count > 0 ? (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">{count}</span>
+                      ) : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        )}
+
+          <div className="app-card p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Detalle del dia</h3>
+              <span className="text-sm font-medium text-slate-700">{selectedKey}</span>
+            </div>
+
+            {selectedReservations.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-sm text-slate-500">
+                No hay reservas para este dia.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {selectedReservations.map((r) => (
+                  <div key={r.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-800">{r.title}</div>
+                        <div className="text-xs text-slate-500">{timeRange(r.startAt, r.endAt)}</div>
+                      </div>
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                          r.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                        }`}
+                      >
+                        {r.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

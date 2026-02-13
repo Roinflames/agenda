@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { CenterUserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+
+type CenterMembershipRole = 'OWNER' | 'ADMIN' | 'STAFF' | 'MEMBER';
 
 @Injectable()
 export class AccessService {
@@ -11,7 +12,7 @@ export class AccessService {
     return u?.role === 'SUPERADMIN';
   }
 
-  async getCenterRole(userId: string, centerId: string): Promise<CenterUserRole | null> {
+  async getCenterRole(userId: string, centerId: string): Promise<CenterMembershipRole | null> {
     if (await this.isSuperadmin(userId)) return 'OWNER';
     const cu = await this.prisma.centerUser.findUnique({
       where: { centerId_userId: { centerId, userId } },
@@ -26,7 +27,7 @@ export class AccessService {
     return role;
   }
 
-  async requireCenterRole(userId: string, centerId: string, roles: CenterUserRole[]) {
+  async requireCenterRole(userId: string, centerId: string, roles: CenterMembershipRole[]) {
     const role = await this.requireCenterMember(userId, centerId);
     if (!roles.includes(role)) throw new ForbiddenException('Permisos insuficientes');
     return role;

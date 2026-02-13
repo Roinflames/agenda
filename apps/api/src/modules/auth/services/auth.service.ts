@@ -112,7 +112,12 @@ export class AuthService {
 
     return {
       user: { id: user.id, email: user.email, name: user.name, phone: user.phone },
-      centers: centers.map((cu) => ({ id: cu.center.id, name: cu.center.name, slug: cu.center.slug, role: cu.role })),
+      centers: centers.map((cu: { center: { id: string; name: string; slug: string }; role: string }) => ({
+        id: cu.center.id,
+        name: cu.center.name,
+        slug: cu.center.slug,
+        role: cu.role,
+      })),
       accessToken,
       refreshToken,
     };
@@ -181,8 +186,12 @@ export class AuthService {
 
     return {
       user,
-      centers: centers.map((cu) => ({ id: cu.center.id, name: cu.center.name, slug: cu.center.slug, role: cu.role })),
+      centers: centers.map((cu: { center: { id: string; name: string; slug: string }; role: string }) => ({
+        id: cu.center.id,
+        name: cu.center.name,
+        slug: cu.center.slug,
+        role: cu.role,
+      })),
     };
   }
 }
-

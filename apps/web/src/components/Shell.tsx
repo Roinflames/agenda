@@ -18,7 +18,7 @@ export default function Shell() {
               CentroFit Admin
             </Link>
             <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-              UI v0.1.0
+              UI v0.3.0
             </span>
           </div>
 

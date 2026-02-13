@@ -19,7 +19,12 @@ export class UsersService {
       include: { user: { select: { id: true, email: true, name: true, phone: true, createdAt: true } } },
       orderBy: { createdAt: 'desc' },
     });
-    return { users: users.map((cu) => ({ ...cu.user, role: cu.role })) };
+    return {
+      users: users.map((cu: { user: { id: string; email: string; name: string; phone: string | null }; role: string }) => ({
+        ...cu.user,
+        role: cu.role,
+      })),
+    };
   }
 
   async create(requesterId: string, dto: CreateUserDto) {
@@ -87,4 +92,3 @@ export class UsersService {
     return { reservations };
   }
 }
-

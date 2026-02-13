@@ -93,13 +93,45 @@ export const api = {
   me: () => request<{ user: any; centers: any[] }>('/auth/me'),
   centers: () => request<{ centers: any[] }>('/centros'),
   centerDashboard: (centerId: string) => request<any>(`/centros/${centerId}/dashboard`),
+
   users: (centerId: string) => request<{ users: any[] }>(`/usuarios?centerId=${encodeURIComponent(centerId)}`),
+  createUser: (payload: {
+    centerId: string;
+    email: string;
+    password: string;
+    name: string;
+    phone?: string;
+    role?: 'ADMIN' | 'STAFF' | 'MEMBER';
+  }) => request<{ userId: string; centerUserId: string }>('/usuarios', { method: 'POST', body: JSON.stringify(payload) }),
+
   reservations: (centerId: string, userId?: string) =>
     request<{ reservations: any[] }>(
       `/reservas?centerId=${encodeURIComponent(centerId)}${userId ? `&userId=${encodeURIComponent(userId)}` : ''}`,
     ),
+  createReservation: (payload: {
+    centerId: string;
+    userId?: string;
+    kind: 'CLASS' | 'SPACE';
+    title: string;
+    startAt: string;
+    endAt: string;
+    priceCents?: number;
+    currency?: string;
+  }) => request<{ reservation: any }>('/reservas', { method: 'POST', body: JSON.stringify(payload) }),
+
   membershipPlans: (centerId: string) =>
     request<{ plans: any[] }>(`/membresias/planes?centerId=${encodeURIComponent(centerId)}`),
+  createMembershipPlan: (payload: {
+    centerId: string;
+    name: string;
+    priceCents: number;
+    currency?: string;
+    interval: 'MONTHLY' | 'YEARLY';
+    isActive?: boolean;
+  }) => request<{ plan: any }>('/membresias/planes', { method: 'POST', body: JSON.stringify(payload) }),
+  assignMembership: (payload: { centerId: string; userId: string; planId: string; endsAt?: string }) =>
+    request<{ membership: any }>('/membresias/asignar', { method: 'POST', body: JSON.stringify(payload) }),
+
   reportsIncome: (centerId: string) => request<any>(`/reportes/ingresos?centerId=${encodeURIComponent(centerId)}`),
   reportsReservations: (centerId: string) => request<any>(`/reportes/reservas?centerId=${encodeURIComponent(centerId)}`),
 };

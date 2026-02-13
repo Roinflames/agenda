@@ -32,7 +32,10 @@ export class CentersService {
     });
 
     return {
-      centers: centers.map((cu) => ({
+      centers: centers.map((cu: {
+        center: { id: string; name: string; slug: string; timezone: string; currency: string };
+        role: string;
+      }) => ({
         id: cu.center.id,
         name: cu.center.name,
         slug: cu.center.slug,
@@ -118,4 +121,3 @@ export class CentersService {
     };
   }
 }
-

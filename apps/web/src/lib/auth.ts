@@ -5,7 +5,7 @@ export type AuthSession = {
   centers?: Array<{ id: string; name: string; slug: string; role: string }>;
 };
 
-const KEY = 'boxmagic.session.v1';
+const KEY = 'centrofit.session.v1';
 
 export function getSession(): AuthSession | null {
   const raw = localStorage.getItem(KEY);

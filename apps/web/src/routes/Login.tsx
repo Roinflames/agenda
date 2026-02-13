@@ -13,36 +13,51 @@ export default function Login() {
   const canSubmit = useMemo(() => email.trim() && password.trim(), [email, password]);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md items-center px-4">
-      <div className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow">
-        <h1 className="text-xl font-semibold">Ingresar</h1>
-        <p className="mt-1 text-sm text-zinc-400">Admin / Staff / Member</p>
+    <div className="mx-auto grid min-h-screen w-full max-w-6xl items-center gap-8 px-4 py-10 md:grid-cols-2">
+      <section className="hidden md:block">
+        <div className="space-y-4">
+          <div className="inline-flex items-center rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-200">
+            Panel operativo
+          </div>
+          <h1 className="text-4xl font-bold leading-tight text-slate-900">Gestiona reservas, membresias y reportes desde un solo lugar</h1>
+          <p className="max-w-md text-slate-600">
+            Accede al panel administrativo para operar centros, usuarios y pagos con una vista clara para el equipo.
+          </p>
+        </div>
+      </section>
 
-        <div className="mt-6 space-y-3">
+      <section className="app-card w-full p-6 md:p-8">
+        <h2 className="text-2xl font-bold text-slate-900">Ingreso al panel</h2>
+        <p className="mt-1 text-sm text-slate-600">Usa tu cuenta de operador o administrador.</p>
+
+        <div className="mt-6 space-y-4">
           <label className="block">
-            <div className="mb-1 text-xs text-zinc-400">Email</div>
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Email</div>
             <input
-              className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-zinc-600"
+              className="app-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoCapitalize="none"
               autoCorrect="off"
+              placeholder="nombre@empresa.com"
             />
           </label>
+
           <label className="block">
-            <div className="mb-1 text-xs text-zinc-400">Password</div>
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Password</div>
             <input
-              className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-zinc-600"
+              className="app-input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
             />
           </label>
 
-          {error ? <div className="rounded-md border border-red-900 bg-red-950 p-3 text-sm">{error}</div> : null}
+          {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div> : null}
 
           <button
-            className="w-full rounded-md bg-white px-3 py-2 text-sm font-medium text-black disabled:opacity-50"
+            className="app-btn-primary w-full"
             disabled={!canSubmit || loading}
             onClick={async () => {
               setError(null);
@@ -52,7 +67,7 @@ export default function Login() {
                 setSession(s);
                 nav('/app', { replace: true });
               } catch (e: any) {
-                setError(e?.message ?? 'Error');
+                setError(e?.message ?? 'No fue posible iniciar sesion');
               } finally {
                 setLoading(false);
               }
@@ -61,8 +76,7 @@ export default function Login() {
             {loading ? 'Ingresando...' : 'Entrar'}
           </button>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
-

@@ -17,6 +17,7 @@ RUN npm run build -w apps/api
 FROM node:20-alpine AS runner
 WORKDIR /repo/apps/api
 ENV NODE_ENV=production
+RUN apk add --no-cache openssl
 
 # Node will resolve deps from /repo/node_modules.
 COPY --from=build /repo/node_modules /repo/node_modules

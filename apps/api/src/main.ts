@@ -6,15 +6,38 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
+function buildAllowedOrigins() {
+  const envOrigins = (process.env.WEB_ORIGIN ?? '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  return new Set([
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5180',
+    'http://127.0.0.1:5180',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
+    ...envOrigins,
+  ]);
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.use(helmet());
   app.use(cookieParser());
 
-  const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:5173';
+  const allowedOrigins = buildAllowedOrigins();
   app.enableCors({
-    origin: [webOrigin],
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   });
 
@@ -27,8 +50,8 @@ async function bootstrap() {
   );
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('BoxMagic SaaS API')
-    .setDescription('API para gestión de centros deportivos: reservas, membresías y pagos.')
+    .setTitle('CentroFit SaaS API')
+    .setDescription('API para gestion de centros deportivos: reservas, membresias y pagos.')
     .setVersion('0.1.0')
     .addBearerAuth()
     .build();

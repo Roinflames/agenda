@@ -2,12 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: light;
+}
+
 html,
-body {
+body,
+#root {
   height: 100%;
 }
 
 body {
-  @apply bg-zinc-950 text-zinc-100;
+  @apply text-slate-900;
+  background:
+    radial-gradient(circle at 10% 10%, #dbeafe 0%, transparent 30%),
+    radial-gradient(circle at 85% 15%, #fde68a 0%, transparent 28%),
+    linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
+@layer components {
+  .app-card {
+    @apply rounded-2xl border border-slate-200 bg-white/85 shadow-sm backdrop-blur;
+  }
+
+  .app-input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100;
+  }
+
+  .app-btn-primary {
+    @apply rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .app-nav-link {
+    @apply rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .app-nav-link-active {
+    @apply bg-slate-900 text-white hover:bg-slate-800 hover:text-white;
+  }
+}

@@ -1,4 +1,4 @@
-# BoxMagic SaaS (MVP)
+# CentroFit SaaS (MVP)
 
 Monorepo:
 - `apps/api`: NestJS + Prisma + Postgres (Neon)
@@ -41,8 +41,44 @@ Credenciales seed:
 - `rreyes@example.com` / `DevPassword123!`
 - `francisca.beltran@example.com` / `DevPassword123!`
 
+Credencial inicial por migracion (recovery):
+- `admin@centrofit.local` / `DevPassword123!`
+
 API Docs: `http://localhost:3001/docs`
 
 ## Deploy Render
 Ver `infra/render/README.md` y `render.yaml`.
 
+## Documento SRS (IEEE 830)
+- Base de requisitos: `docs/SRS_IEEE830.md`
+
+## Etapas de desarrollo (ciclo de vida)
+### Etapa 1 - Descubrimiento y alcance
+- Objetivo: alinear objetivos de negocio, alcance MVP y restricciones.
+- Salida esperada: backlog inicial priorizado y supuestos validados.
+
+### Etapa 2 - Especificacion funcional
+- Objetivo: formalizar requisitos en SRS IEEE 830.
+- Salida esperada: `RF`, `RNF`, `RB` y `CA` aprobados.
+
+### Etapa 3 - Diseno tecnico
+- Objetivo: cerrar arquitectura, datos y contratos API/UI.
+- Salida esperada: decisiones tecnicas documentadas y modelo de datos estable.
+
+### Etapa 4 - Construccion MVP
+- Objetivo: implementar modulos core (auth, centros, usuarios, reservas, membresias, pagos, reportes).
+- Salida esperada: flujo E2E operativo en ambiente de prueba.
+
+### Etapa 5 - Pruebas y hardening
+- Objetivo: validar criterios de aceptacion, seguridad base y estabilidad.
+- Salida esperada: correcciones criticas cerradas y release candidata.
+
+### Etapa 6 - Deploy y operacion
+- Objetivo: publicar en Render, monitorear salud y preparar iteraciones.
+- Salida esperada: despliegue estable + plan de mejoras por release.
+
+## Releases sugeridas
+- `v0.1.0`: Base operativa (auth, centros, usuarios, reservas).
+- `v0.2.0`: Membresias, pagos y webhook.
+- `v0.3.0`: Reportes y ajustes de UX operativa.
+- `v1.0.0`: Cierre MVP validado con criterios de aceptacion.

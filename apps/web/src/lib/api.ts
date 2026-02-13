@@ -1,6 +1,15 @@
 import { getAccessToken, getRefreshToken, getSession, setSession, type AuthSession } from './auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001';
+function resolveApiBaseUrl() {
+  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL as string;
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname || 'localhost';
+    return `http://${host}:3101`;
+  }
+  return 'http://localhost:3101';
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 type ApiError = Error & { status?: number; body?: any };
 
@@ -15,13 +24,20 @@ async function request<T>(path: string, init: RequestInit & { auth?: boolean } =
     if (token) headers.set('authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(url, { ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, headers });
+  } catch {
+    const err: ApiError = new Error(`No se pudo conectar con API (${API_BASE_URL}). Verifica contenedores y CORS.`);
+    err.status = 0;
+    throw err;
+  }
+
   const text = await res.text();
   const body = text ? safeJson(text) : null;
 
   if (res.ok) return body as T;
 
-  // Attempt refresh once on 401 for authenticated calls
   if (res.status === 401 && init.auth !== false) {
     const ok = await tryRefresh();
     if (ok) return request<T>(path, init);
@@ -45,15 +61,23 @@ async function tryRefresh() {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
 
-  const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+  } catch {
+    setSession(null);
+    return false;
+  }
+
   if (!res.ok) {
     setSession(null);
     return false;
   }
+
   const data = (await res.json()) as { accessToken: string; refreshToken: string };
   const current = getSession();
   if (!current) return false;
@@ -79,4 +103,3 @@ export const api = {
   reportsIncome: (centerId: string) => request<any>(`/reportes/ingresos?centerId=${encodeURIComponent(centerId)}`),
   reportsReservations: (centerId: string) => request<any>(`/reportes/reservas?centerId=${encodeURIComponent(centerId)}`),
 };
-

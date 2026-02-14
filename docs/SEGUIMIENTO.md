@@ -40,7 +40,7 @@
 - [x] Reportes avanzados de agenda: KPIs, cancelación %, demanda por día y top clases con filtro de fechas
 
 ## Features Pendientes (Backlog futuro)
-- [ ] Notificaciones (email/push)
+- [x] Notificaciones (email/push)
 
 ## Historial de Sesiones
 
@@ -73,3 +73,10 @@
 - Frontend Reportes: filtros de fechas `desde/hasta` consumiendo API para ingresos, reservas y agenda
 - Frontend Reportes: nuevas tarjetas KPI + secciones de demanda semanal y top clases
 - Build API/Web verificado OK
+
+### 2026-02-14 (sesión 4 - Notificaciones email/push)
+- Prisma: agregado modelo `Notification` + enums `NotificationChannel` y `NotificationStatus` con migración nueva
+- API: nuevo módulo `/notificaciones` con endpoints `GET /notificaciones` y `POST /notificaciones/enviar`
+- API: envío simulado por canal (`EMAIL`/`PUSH`) con estado `SENT/FAILED` según datos del usuario
+- Frontend: nueva ruta `/app/notifications` para enviar notificaciones y consultar historial
+- Frontend: cliente API actualizado con `notifications()` y `sendNotification()`

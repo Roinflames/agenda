@@ -4,6 +4,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CentersModule } from './modules/centers/centers.module';
 import { HealthModule } from './modules/health/health.module';
 import { MembershipsModule } from './modules/memberships/memberships.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { ReportsModule } from './modules/reports/reports.module';
@@ -24,6 +25,7 @@ import { UsersModule } from './modules/users/users.module';
     SchedulesModule,
     TimeBlocksModule,
     MembershipsModule,
+    NotificationsModule,
     PaymentsModule,
     ReportsModule,
   ],

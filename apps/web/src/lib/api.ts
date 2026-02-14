@@ -194,4 +194,20 @@ export const api = {
     request<{ user: any }>(`/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   userReservations: (userId: string, centerId: string) =>
     request<{ reservations: any[] }>(`/usuarios/${userId}/reservas?centerId=${encodeURIComponent(centerId)}`),
+
+  // Notifications
+  notifications: (centerId: string, filters?: { userId?: string; channel?: 'EMAIL' | 'PUSH'; status?: 'PENDING' | 'SENT' | 'FAILED' }) => {
+    let url = `/notificaciones?centerId=${encodeURIComponent(centerId)}`;
+    if (filters?.userId) url += `&userId=${encodeURIComponent(filters.userId)}`;
+    if (filters?.channel) url += `&channel=${encodeURIComponent(filters.channel)}`;
+    if (filters?.status) url += `&status=${encodeURIComponent(filters.status)}`;
+    return request<{ notifications: any[] }>(url);
+  },
+  sendNotification: (payload: {
+    centerId: string;
+    userId: string;
+    channel: 'EMAIL' | 'PUSH';
+    title: string;
+    message: string;
+  }) => request<{ notification: any }>('/notificaciones/enviar', { method: 'POST', body: JSON.stringify(payload) }),
 };

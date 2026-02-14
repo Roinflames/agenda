@@ -60,6 +60,17 @@ enum MemberStatus {
   PRUEBA
 }
 
+enum NotificationChannel {
+  EMAIL
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -74,6 +85,7 @@ model User {
   reservations Reservation[]
   memberships  Membership[]
   payments     Payment[]
+  notifications Notification[]
   refreshTokens RefreshToken[]
 }
 
@@ -107,6 +119,7 @@ model Center {
   payments     Payment[]
   schedules    ClassSchedule[]
   timeBlocks   TimeBlock[]
+  notifications Notification[]
 }
 
 model CenterUser {
@@ -263,4 +276,26 @@ model TimeBlock {
   center Center @relation(fields: [centerId], references: [id], onDelete: Cascade)
 
   @@index([centerId, startAt])
+}
+
+model Notification {
+  id        String              @id @default(uuid())
+  centerId  String
+  userId    String
+  channel   NotificationChannel
+  status    NotificationStatus  @default(PENDING)
+  title     String
+  message   String
+  error     String?
+  sentAt    DateTime?
+  metadata  Json?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  center Center @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([centerId, createdAt])
+  @@index([userId, createdAt])
+  @@index([centerId, channel, status])
 }

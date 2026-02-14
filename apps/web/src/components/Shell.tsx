@@ -18,7 +18,7 @@ export default function Shell() {
               CentroFit Admin
             </Link>
             <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-              UI v0.4.0
+              UI v0.5.0
             </span>
           </div>
 
@@ -58,6 +58,9 @@ export default function Shell() {
             </NavLink>
             <NavLink to="/app/reports" className={({ isActive }) => navClass(isActive)}>
               Reportes
+            </NavLink>
+            <NavLink to="/app/notifications" className={({ isActive }) => navClass(isActive)}>
+              Notificaciones
             </NavLink>
           </div>
         </nav>

@@ -81,4 +81,5 @@ Ver `infra/render/README.md` y `render.yaml`.
 - `v0.1.0`: Base operativa (auth, centros, usuarios, reservas).
 - `v0.2.0`: Membresias, pagos y webhook.
 - `v0.3.0`: Reportes y ajustes de UX operativa.
+- `v0.4.0`: Agenda operativa (horarios, bloqueos, calendario semanal) + reportes avanzados de agenda.
 - `v1.0.0`: Cierre MVP validado con criterios de aceptacion.

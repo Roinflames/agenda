@@ -8,6 +8,8 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { ReservationsModule } from './modules/reservations/reservations.module';
+import { SchedulesModule } from './modules/schedules/schedules.module';
+import { TimeBlocksModule } from './modules/time-blocks/time-blocks.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -19,6 +21,8 @@ import { UsersModule } from './modules/users/users.module';
     CentersModule,
     UsersModule,
     ReservationsModule,
+    SchedulesModule,
+    TimeBlocksModule,
     MembershipsModule,
     PaymentsModule,
     ReportsModule,

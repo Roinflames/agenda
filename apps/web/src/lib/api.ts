@@ -4,9 +4,9 @@ function resolveApiBaseUrl() {
   if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL as string;
   if (typeof window !== 'undefined') {
     const host = window.location.hostname || 'localhost';
-    return `http://${host}:3101`;
+    return `http://${host}:3001`;
   }
-  return 'http://localhost:3101';
+  return 'http://localhost:3001';
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
@@ -132,6 +132,66 @@ export const api = {
   assignMembership: (payload: { centerId: string; userId: string; planId: string; endsAt?: string }) =>
     request<{ membership: any }>('/membresias/asignar', { method: 'POST', body: JSON.stringify(payload) }),
 
-  reportsIncome: (centerId: string) => request<any>(`/reportes/ingresos?centerId=${encodeURIComponent(centerId)}`),
-  reportsReservations: (centerId: string) => request<any>(`/reportes/reservas?centerId=${encodeURIComponent(centerId)}`),
+  reportsIncome: (centerId: string, from?: string, to?: string) => {
+    let url = `/reportes/ingresos?centerId=${encodeURIComponent(centerId)}`;
+    if (from) url += `&from=${encodeURIComponent(from)}`;
+    if (to) url += `&to=${encodeURIComponent(to)}`;
+    return request<any>(url);
+  },
+  reportsReservations: (centerId: string, from?: string, to?: string) => {
+    let url = `/reportes/reservas?centerId=${encodeURIComponent(centerId)}`;
+    if (from) url += `&from=${encodeURIComponent(from)}`;
+    if (to) url += `&to=${encodeURIComponent(to)}`;
+    return request<any>(url);
+  },
+  reportsAgenda: (centerId: string, from?: string, to?: string) => {
+    let url = `/reportes/agenda?centerId=${encodeURIComponent(centerId)}`;
+    if (from) url += `&from=${encodeURIComponent(from)}`;
+    if (to) url += `&to=${encodeURIComponent(to)}`;
+    return request<any>(url);
+  },
+
+  // Schedules
+  schedules: (centerId: string) =>
+    request<{ schedules: any[] }>(`/horarios?centerId=${encodeURIComponent(centerId)}`),
+  createSchedule: (payload: {
+    centerId: string;
+    name: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    capacity?: number;
+    description?: string;
+    spaceId?: string;
+  }) => request<{ schedule: any }>('/horarios', { method: 'POST', body: JSON.stringify(payload) }),
+  updateSchedule: (id: string, payload: Record<string, any>) =>
+    request<{ schedule: any }>(`/horarios/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteSchedule: (id: string) =>
+    request<{ ok: boolean }>(`/horarios/${id}`, { method: 'DELETE' }),
+
+  // Time Blocks
+  timeBlocks: (centerId: string, from?: string, to?: string) => {
+    let url = `/bloqueos?centerId=${encodeURIComponent(centerId)}`;
+    if (from) url += `&from=${encodeURIComponent(from)}`;
+    if (to) url += `&to=${encodeURIComponent(to)}`;
+    return request<{ timeBlocks: any[] }>(url);
+  },
+  createTimeBlock: (payload: { centerId: string; name: string; startAt: string; endAt: string }) =>
+    request<{ timeBlock: any }>('/bloqueos', { method: 'POST', body: JSON.stringify(payload) }),
+  updateTimeBlock: (id: string, payload: Record<string, any>) =>
+    request<{ timeBlock: any }>(`/bloqueos/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteTimeBlock: (id: string) =>
+    request<{ ok: boolean }>(`/bloqueos/${id}`, { method: 'DELETE' }),
+
+  // Reservations (update/delete)
+  updateReservation: (id: string, payload: Record<string, any>) =>
+    request<{ reservation: any }>(`/reservas/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteReservation: (id: string) =>
+    request<{ ok: boolean }>(`/reservas/${id}`, { method: 'DELETE' }),
+
+  // Users (update)
+  updateUser: (id: string, payload: Record<string, any>) =>
+    request<{ user: any }>(`/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  userReservations: (userId: string, centerId: string) =>
+    request<{ reservations: any[] }>(`/usuarios/${userId}/reservas?centerId=${encodeURIComponent(centerId)}`),
 };

@@ -24,6 +24,11 @@ export class CreateReservationDto {
   @IsString()
   spaceId?: string;
 
+  @ApiProperty({ required: false, description: 'ID del horario de clase (para validar capacidad)' })
+  @IsOptional()
+  @IsString()
+  scheduleId?: string;
+
   @ApiProperty({ example: '2026-02-12T10:00:00.000Z' })
   @IsString()
   startAt!: string;

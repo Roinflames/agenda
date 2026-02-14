@@ -60,6 +60,36 @@ export class ReservationsService {
       if (overlap) throw new BadRequestException('Horario no disponible');
     }
 
+    // Validar conflictos con bloqueos de tiempo
+    const timeBlockConflict = await this.prisma.timeBlock.findFirst({
+      where: {
+        centerId: dto.centerId,
+        startAt: { lt: endAt },
+        endAt: { gt: startAt },
+      },
+    });
+    if (timeBlockConflict) throw new BadRequestException('Horario bloqueado');
+
+    // Validar capacidad si se asocia a un horario de clase
+    if (dto.scheduleId) {
+      const schedule = await this.prisma.classSchedule.findUnique({
+        where: { id: dto.scheduleId },
+      });
+      if (!schedule) throw new BadRequestException('Horario de clase no encontrado');
+
+      const confirmedCount = await this.prisma.reservation.count({
+        where: {
+          scheduleId: dto.scheduleId,
+          status: 'CONFIRMED',
+          startAt: { gte: startAt },
+          endAt: { lte: endAt },
+        },
+      });
+      if (confirmedCount >= schedule.capacity) {
+        throw new BadRequestException('Clase llena');
+      }
+    }
+
     const center = await this.access.requireCenterExists(dto.centerId);
 
     const reservation = await this.prisma.reservation.create({
@@ -69,6 +99,7 @@ export class ReservationsService {
         kind: dto.kind,
         title: dto.title,
         spaceId: dto.spaceId,
+        scheduleId: dto.scheduleId,
         startAt,
         endAt,
         status: 'CONFIRMED',

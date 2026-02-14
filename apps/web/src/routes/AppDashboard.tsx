@@ -38,13 +38,13 @@ export default function AppDashboard() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Dashboard</h2>
-          <div className="text-sm text-zinc-400">Centro: {selectedCenter?.name ?? '-'}</div>
+          <h2 className="text-xl font-bold text-slate-900">Dashboard</h2>
+          <p className="text-sm text-slate-500">Bienvenido, {session?.user?.name ?? session?.user?.email ?? 'usuario'}. Centro: {selectedCenter?.name ?? '-'}</p>
         </div>
         <label className="block">
-          <div className="mb-1 text-xs text-zinc-400">Centro</div>
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Centro</div>
           <select
-            className="rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm"
+            className="app-input w-auto"
             value={centerId}
             onChange={(e) => setCenterId(e.target.value)}
           >
@@ -57,27 +57,26 @@ export default function AppDashboard() {
         </label>
       </div>
 
-      {error ? <div className="rounded-md border border-red-900 bg-red-950 p-3 text-sm">{error}</div> : null}
+      {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div> : null}
 
       {dashboard ? (
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            <div className="text-xs text-zinc-400">Miembros</div>
-            <div className="mt-1 text-2xl font-semibold">{dashboard.metrics.members}</div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="app-card p-5">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Miembros</div>
+            <div className="mt-2 text-3xl font-bold text-slate-900">{dashboard.metrics.members}</div>
           </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            <div className="text-xs text-zinc-400">Reservas (rango)</div>
-            <div className="mt-1 text-2xl font-semibold">{dashboard.metrics.reservations}</div>
+          <div className="app-card p-5">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reservas (rango)</div>
+            <div className="mt-2 text-3xl font-bold text-slate-900">{dashboard.metrics.reservations}</div>
           </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            <div className="text-xs text-zinc-400">Ingresos (cents)</div>
-            <div className="mt-1 text-2xl font-semibold">{dashboard.metrics.revenueCents}</div>
+          <div className="app-card p-5">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Ingresos (cents)</div>
+            <div className="mt-2 text-3xl font-bold text-slate-900">{dashboard.metrics.revenueCents}</div>
           </div>
         </div>
       ) : (
-        <div className="text-sm text-zinc-400">Cargando...</div>
+        <div className="text-sm text-slate-500">Cargando...</div>
       )}
     </div>
   );
 }
-

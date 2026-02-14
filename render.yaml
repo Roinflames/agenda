@@ -13,7 +13,7 @@ services:
       - key: API_PORT
         value: 3001
       - key: WEB_ORIGIN
-        value: https://boxmagic-web.onrender.com
+        value: https://agenda-1-inkp.onrender.com
       - key: DATABASE_URL
         sync: false
       - key: JWT_ACCESS_SECRET
@@ -25,9 +25,9 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
       - key: STRIPE_SUCCESS_URL
-        value: https://boxmagic-web.onrender.com/pay/success
+        value: https://agenda-1-inkp.onrender.com/pay/success
       - key: STRIPE_CANCEL_URL
-        value: https://boxmagic-web.onrender.com/pay/cancel
+        value: https://agenda-1-inkp.onrender.com/pay/cancel
 
   - type: web
     name: boxmagic-web

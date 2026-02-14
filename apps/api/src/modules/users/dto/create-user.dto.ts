@@ -28,5 +28,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsIn(['OWNER', 'ADMIN', 'STAFF', 'MEMBER'])
   role?: 'OWNER' | 'ADMIN' | 'STAFF' | 'MEMBER';
+
+  @ApiProperty({ required: false, enum: ['ACTIVO', 'CONGELADO', 'SUSPENDIDO', 'PRUEBA'], default: 'ACTIVO' })
+  @IsOptional()
+  @IsIn(['ACTIVO', 'CONGELADO', 'SUSPENDIDO', 'PRUEBA'])
+  status?: 'ACTIVO' | 'CONGELADO' | 'SUSPENDIDO' | 'PRUEBA';
 }
 

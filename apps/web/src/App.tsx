@@ -7,6 +7,8 @@ import Users from './routes/Users';
 import Reservations from './routes/Reservations';
 import Memberships from './routes/Memberships';
 import Reports from './routes/Reports';
+import Schedules from './routes/Schedules';
+import TimeBlocks from './routes/TimeBlocks';
 
 export default function App() {
   return (
@@ -19,6 +21,8 @@ export default function App() {
           <Route path="/app/reservations" element={<Reservations />} />
           <Route path="/app/memberships" element={<Memberships />} />
           <Route path="/app/reports" element={<Reports />} />
+          <Route path="/app/schedules" element={<Schedules />} />
+          <Route path="/app/time-blocks" element={<TimeBlocks />} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to="/app" replace />} />

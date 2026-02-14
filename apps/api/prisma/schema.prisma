@@ -53,6 +53,13 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum MemberStatus {
+  ACTIVO
+  CONGELADO
+  SUSPENDIDO
+  PRUEBA
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -92,12 +99,14 @@ model Center {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
-  users       CenterUser[]
-  spaces      Space[]
-  plans       MembershipPlan[]
-  memberships Membership[]
+  users        CenterUser[]
+  spaces       Space[]
+  plans        MembershipPlan[]
+  memberships  Membership[]
   reservations Reservation[]
-  payments    Payment[]
+  payments     Payment[]
+  schedules    ClassSchedule[]
+  timeBlocks   TimeBlock[]
 }
 
 model CenterUser {
@@ -105,6 +114,7 @@ model CenterUser {
   centerId String
   userId   String
   role     CenterUserRole @default(MEMBER)
+  status   MemberStatus   @default(ACTIVO)
   createdAt DateTime      @default(now())
 
   center Center @relation(fields: [centerId], references: [id], onDelete: Cascade)
@@ -122,8 +132,9 @@ model Space {
   capacity  Int      @default(1)
   createdAt DateTime @default(now())
 
-  center       Center        @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  center       Center          @relation(fields: [centerId], references: [id], onDelete: Cascade)
   reservations Reservation[]
+  schedules    ClassSchedule[]
 
   @@index([centerId])
 }
@@ -164,27 +175,30 @@ model Membership {
 }
 
 model Reservation {
-  id        String            @id @default(uuid())
-  centerId  String
-  userId    String
-  kind      ReservationKind
-  title     String
-  spaceId   String?
-  startAt   DateTime
-  endAt     DateTime
-  status    ReservationStatus @default(CONFIRMED)
-  priceCents Int             @default(0)
-  currency  String           @default("usd")
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id         String            @id @default(uuid())
+  centerId   String
+  userId     String
+  kind       ReservationKind
+  title      String
+  spaceId    String?
+  scheduleId String?
+  startAt    DateTime
+  endAt      DateTime
+  status     ReservationStatus @default(CONFIRMED)
+  priceCents Int               @default(0)
+  currency   String            @default("usd")
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 
-  center Center @relation(fields: [centerId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  space  Space? @relation(fields: [spaceId], references: [id])
+  center   Center         @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space    Space?         @relation(fields: [spaceId], references: [id])
+  schedule ClassSchedule? @relation(fields: [scheduleId], references: [id])
 
   @@index([centerId, startAt])
   @@index([userId, startAt])
   @@index([spaceId, startAt])
+  @@index([scheduleId, startAt])
 }
 
 model Payment {
@@ -214,4 +228,39 @@ model WebhookEvent {
   eventId   String   @unique
   payload   Json
   receivedAt DateTime @default(now())
+}
+
+model ClassSchedule {
+  id          String   @id @default(uuid())
+  centerId    String
+  name        String
+  description String?
+  dayOfWeek   Int      // 0=Domingo, 1=Lunes, ..., 6=Sábado
+  startTime   String   // "HH:mm"
+  endTime     String   // "HH:mm"
+  capacity    Int      @default(20)
+  isActive    Boolean  @default(true)
+  spaceId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  center       Center        @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  space        Space?        @relation(fields: [spaceId], references: [id])
+  reservations Reservation[]
+
+  @@index([centerId, dayOfWeek])
+  @@index([centerId, isActive])
+}
+
+model TimeBlock {
+  id        String   @id @default(uuid())
+  centerId  String
+  name      String
+  startAt   DateTime
+  endAt     DateTime
+  createdAt DateTime @default(now())
+
+  center Center @relation(fields: [centerId], references: [id], onDelete: Cascade)
+
+  @@index([centerId, startAt])
 }

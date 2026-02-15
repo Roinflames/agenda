@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { AccessService } from '../../access/access.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateReservationDto } from '../dto/create-reservation.dto';
@@ -16,13 +16,22 @@ export class ReservationsService {
     const requestedUserId = filter.userId;
 
     if (requestedUserId && role === 'MEMBER' && requestedUserId !== requesterId) {
-      throw new BadRequestException('Solo puedes ver tus reservas');
+      throw new ForbiddenException('No puedes ver reservas de otros usuarios');
     }
 
-    const where = {
-      centerId,
-      ...(requestedUserId ? { userId: requestedUserId } : {}),
-    };
+    const where: any = { centerId };
+    if (role === 'MEMBER') {
+      where.userId = requesterId;
+    } else if (role === 'STAFF') {
+      if (requestedUserId && requestedUserId !== requesterId) {
+        where.userId = requestedUserId;
+        where.staffId = requesterId;
+      } else {
+        where.OR = [{ userId: requesterId }, { staffId: requesterId }];
+      }
+    } else if (requestedUserId) {
+      where.userId = requestedUserId;
+    }
 
     const reservations = await this.prisma.reservation.findMany({
       where,
@@ -36,7 +45,7 @@ export class ReservationsService {
     const userId = dto.userId ?? requesterId;
 
     if (role === 'MEMBER' && userId !== requesterId) {
-      throw new BadRequestException('No puedes reservar para otro usuario');
+      throw new ForbiddenException('No puedes reservar para otro usuario');
     }
 
     const startAt = new Date(dto.startAt);
@@ -44,6 +53,19 @@ export class ReservationsService {
     if (!(startAt instanceof Date) || isNaN(startAt.getTime())) throw new BadRequestException('startAt inválido');
     if (!(endAt instanceof Date) || isNaN(endAt.getTime())) throw new BadRequestException('endAt inválido');
     if (endAt <= startAt) throw new BadRequestException('endAt debe ser > startAt');
+
+    // Evitar duplicado exacto de un usuario en misma clase/horario.
+    const duplicate = await this.prisma.reservation.findFirst({
+      where: {
+        centerId: dto.centerId,
+        userId,
+        scheduleId: dto.scheduleId ?? undefined,
+        startAt,
+        endAt,
+        status: 'CONFIRMED',
+      },
+    });
+    if (duplicate) throw new BadRequestException('Ya tienes una reserva para ese horario');
 
     // Basic overlap protection: same center + same space (if any)
     if (dto.spaceId) {
@@ -70,7 +92,7 @@ export class ReservationsService {
     });
     if (timeBlockConflict) throw new BadRequestException('Horario bloqueado');
 
-    // Validar capacidad si se asocia a un horario de clase
+    // Validar capacidad si se asocia a un horario de clase.
     if (dto.scheduleId) {
       const schedule = await this.prisma.classSchedule.findUnique({
         where: { id: dto.scheduleId },
@@ -81,8 +103,8 @@ export class ReservationsService {
         where: {
           scheduleId: dto.scheduleId,
           status: 'CONFIRMED',
-          startAt: { gte: startAt },
-          endAt: { lte: endAt },
+          startAt: { lt: endAt },
+          endAt: { gt: startAt },
         },
       });
       if (confirmedCount >= schedule.capacity) {
@@ -96,6 +118,7 @@ export class ReservationsService {
       data: {
         centerId: dto.centerId,
         userId,
+        staffId: role === 'STAFF' ? requesterId : null,
         kind: dto.kind,
         title: dto.title,
         spaceId: dto.spaceId,
@@ -116,7 +139,12 @@ export class ReservationsService {
     if (!existing) throw new NotFoundException('Reserva no encontrada');
 
     const role = await this.access.requireCenterMember(requesterId, existing.centerId);
-    if (role === 'MEMBER' && existing.userId !== requesterId) throw new BadRequestException('No permitido');
+    if (role === 'MEMBER' && existing.userId !== requesterId) {
+      throw new ForbiddenException('No puedes modificar reservas de otros usuarios');
+    }
+    if (role === 'STAFF' && existing.userId !== requesterId && existing.staffId !== requesterId) {
+      throw new ForbiddenException('No puedes modificar reservas no asignadas a ti');
+    }
 
     const startAt = dto.startAt ? new Date(dto.startAt) : undefined;
     const endAt = dto.endAt ? new Date(dto.endAt) : undefined;
@@ -140,11 +168,15 @@ export class ReservationsService {
     if (!existing) throw new NotFoundException('Reserva no encontrada');
 
     const role = await this.access.requireCenterMember(requesterId, existing.centerId);
-    if (role === 'MEMBER' && existing.userId !== requesterId) throw new BadRequestException('No permitido');
+    if (role === 'MEMBER' && existing.userId !== requesterId) {
+      throw new ForbiddenException('No puedes eliminar reservas de otros usuarios');
+    }
+    if (role === 'STAFF' && existing.userId !== requesterId && existing.staffId !== requesterId) {
+      throw new ForbiddenException('No puedes eliminar reservas no asignadas a ti');
+    }
 
     // Delete per requirement; for audit, you'd soft-cancel.
     await this.prisma.reservation.delete({ where: { id: reservationId } });
     return { ok: true };
   }
 }
-

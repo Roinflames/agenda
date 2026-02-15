@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { getSession } from '../lib/auth';
+import { getActiveCenter, getSession } from '../lib/auth';
 
 type Channel = 'EMAIL' | 'PUSH';
 
@@ -11,7 +11,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function Notifications() {
-  const centerId = getSession()?.centers?.[0]?.id ?? '';
+  const centerId = getActiveCenter(getSession())?.id ?? '';
   const [users, setUsers] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);

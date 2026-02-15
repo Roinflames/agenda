@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { getSession } from '../lib/auth';
+import { getActiveCenter, getSession } from '../lib/auth';
 
 export default function Reports() {
-  const centerId = getSession()?.centers?.[0]?.id ?? '';
+  const centerId = getActiveCenter(getSession())?.id ?? '';
   const [income, setIncome] = useState<any>(null);
   const [reservations, setReservations] = useState<any>(null);
   const [agenda, setAgenda] = useState<any>(null);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { getSession } from '../lib/auth';
+import { getActiveCenter, getSession } from '../lib/auth';
 
 type TimeBlock = {
   id: string;
@@ -41,7 +41,7 @@ const emptyForm = () => {
 };
 
 export default function TimeBlocks() {
-  const centerId = getSession()?.centers?.[0]?.id ?? '';
+  const centerId = getActiveCenter(getSession())?.id ?? '';
   const [blocks, setBlocks] = useState<TimeBlock[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);

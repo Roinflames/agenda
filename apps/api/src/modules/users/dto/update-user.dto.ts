@@ -16,6 +16,11 @@ export class UpdateUserDto {
   @IsString()
   phone?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
   @ApiProperty({ required: false, enum: ['OWNER', 'ADMIN', 'STAFF', 'MEMBER'] })
   @IsOptional()
   @IsIn(['OWNER', 'ADMIN', 'STAFF', 'MEMBER'])
@@ -26,4 +31,3 @@ export class UpdateUserDto {
   @IsIn(['ACTIVO', 'CONGELADO', 'SUSPENDIDO', 'PRUEBA'])
   status?: 'ACTIVO' | 'CONGELADO' | 'SUSPENDIDO' | 'PRUEBA';
 }
-

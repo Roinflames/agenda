@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { getSession } from '../lib/auth';
+import { getActiveCenter, getSession } from '../lib/auth';
 
 type Schedule = {
   id: string;
@@ -25,7 +25,7 @@ const emptyForm = {
 };
 
 export default function Schedules() {
-  const centerId = getSession()?.centers?.[0]?.id ?? '';
+  const centerId = getActiveCenter(getSession())?.id ?? '';
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -120,7 +120,7 @@ export default function Schedules() {
           {editingId ? 'Editar horario' : 'Crear horario'}
         </h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <input className="app-input" placeholder="Nombre (ej: CrossFit AM)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input className="app-input" placeholder="Nombre (ej: Pilates con Felipe)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input className="app-input" placeholder="Descripcion (opcional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <select className="app-input" value={form.dayOfWeek} onChange={(e) => setForm({ ...form, dayOfWeek: Number(e.target.value) })}>
             {DAY_NAMES.map((name, i) => (

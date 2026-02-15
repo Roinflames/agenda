@@ -71,18 +71,25 @@ enum NotificationStatus {
   FAILED
 }
 
+enum CenterServiceStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
   passwordHash String
   name         String
   phone        String?
+  avatarUrl    String?
   role         UserRole       @default(USER)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
   centers      CenterUser[]
   reservations Reservation[]
+  staffManagedReservations Reservation[] @relation("ReservationStaff")
   memberships  Membership[]
   payments     Payment[]
   notifications Notification[]
@@ -108,6 +115,9 @@ model Center {
   slug      String      @unique
   timezone  String      @default("UTC")
   currency  String      @default("usd")
+  serviceStatus CenterServiceStatus @default(ACTIVE)
+  suspensionReason String?
+  suspendedAt DateTime?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
@@ -191,6 +201,7 @@ model Reservation {
   id         String            @id @default(uuid())
   centerId   String
   userId     String
+  staffId    String?
   kind       ReservationKind
   title      String
   spaceId    String?
@@ -205,6 +216,7 @@ model Reservation {
 
   center   Center         @relation(fields: [centerId], references: [id], onDelete: Cascade)
   user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staff    User?          @relation("ReservationStaff", fields: [staffId], references: [id], onDelete: SetNull)
   space    Space?         @relation(fields: [spaceId], references: [id])
   schedule ClassSchedule? @relation(fields: [scheduleId], references: [id])
 
@@ -212,6 +224,7 @@ model Reservation {
   @@index([userId, startAt])
   @@index([spaceId, startAt])
   @@index([scheduleId, startAt])
+  @@index([staffId, startAt])
 }
 
 model Payment {

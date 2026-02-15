@@ -92,7 +92,10 @@ export const api = {
     request<AuthSession>('/auth/login', { method: 'POST', auth: false, body: JSON.stringify({ email, password }) }),
   me: () => request<{ user: any; centers: any[] }>('/auth/me'),
   centers: () => request<{ centers: any[] }>('/centros'),
+  clientCentersForSuspension: () => request<{ centers: any[] }>('/centros/clientes/suspension'),
   centerDashboard: (centerId: string) => request<any>(`/centros/${centerId}/dashboard`),
+  updateCenterServiceStatus: (centerId: string, payload: { serviceStatus: 'ACTIVE' | 'SUSPENDED'; suspensionReason?: string }) =>
+    request<{ center: any }>(`/centros/${centerId}/service-status`, { method: 'PUT', body: JSON.stringify(payload) }),
 
   users: (centerId: string) => request<{ users: any[] }>(`/usuarios?centerId=${encodeURIComponent(centerId)}`),
   createUser: (payload: {
@@ -101,7 +104,9 @@ export const api = {
     password: string;
     name: string;
     phone?: string;
+    avatarUrl?: string;
     role?: 'ADMIN' | 'STAFF' | 'MEMBER';
+    status?: 'ACTIVO' | 'CONGELADO' | 'SUSPENDIDO' | 'PRUEBA';
   }) => request<{ userId: string; centerUserId: string }>('/usuarios', { method: 'POST', body: JSON.stringify(payload) }),
 
   reservations: (centerId: string, userId?: string) =>
@@ -113,6 +118,7 @@ export const api = {
     userId?: string;
     kind: 'CLASS' | 'SPACE';
     title: string;
+    scheduleId?: string;
     startAt: string;
     endAt: string;
     priceCents?: number;
@@ -131,6 +137,10 @@ export const api = {
   }) => request<{ plan: any }>('/membresias/planes', { method: 'POST', body: JSON.stringify(payload) }),
   assignMembership: (payload: { centerId: string; userId: string; planId: string; endsAt?: string }) =>
     request<{ membership: any }>('/membresias/asignar', { method: 'POST', body: JSON.stringify(payload) }),
+  currentMembership: (centerId: string) =>
+    request<{ membership: any | null }>(`/membresias/actual?centerId=${encodeURIComponent(centerId)}`),
+  changeMyMembershipPlan: (payload: { centerId: string; planId: string; endsAt?: string }) =>
+    request<{ membership: any }>('/membresias/cambiar-plan', { method: 'POST', body: JSON.stringify(payload) }),
 
   reportsIncome: (centerId: string, from?: string, to?: string) => {
     let url = `/reportes/ingresos?centerId=${encodeURIComponent(centerId)}`;

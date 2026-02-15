@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { AccessService } from '../../access/access.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssignMembershipDto } from '../dto/assign-membership.dto';
+import { ChangeOwnMembershipDto } from '../dto/change-own-membership.dto';
 import { CreatePlanDto } from '../dto/create-plan.dto';
 import { UpdatePlanDto } from '../dto/update-plan.dto';
 
@@ -78,6 +79,46 @@ export class MembershipsService {
     return { membership };
   }
 
+  async currentForMe(requesterId: string, centerId: string) {
+    await this.access.requireCenterMember(requesterId, centerId);
+    const membership = await this.prisma.membership.findFirst({
+      where: { centerId, userId: requesterId, status: 'ACTIVE' },
+      include: { plan: true },
+      orderBy: { startedAt: 'desc' },
+    });
+    return { membership };
+  }
+
+  async changeOwnPlan(requesterId: string, dto: ChangeOwnMembershipDto) {
+    await this.access.requireCenterMember(requesterId, dto.centerId);
+    const plan = await this.prisma.membershipPlan.findUnique({ where: { id: dto.planId } });
+    if (!plan || plan.centerId !== dto.centerId || !plan.isActive) {
+      throw new BadRequestException('Plan inválido');
+    }
+
+    const now = new Date();
+    const membership = await this.prisma.$transaction(async (tx) => {
+      await tx.membership.updateMany({
+        where: { centerId: dto.centerId, userId: requesterId, status: 'ACTIVE' },
+        data: { status: 'CANCELED', endsAt: now },
+      });
+
+      return tx.membership.create({
+        data: {
+          centerId: dto.centerId,
+          userId: requesterId,
+          planId: dto.planId,
+          status: 'ACTIVE',
+          startedAt: now,
+          endsAt: dto.endsAt ? new Date(dto.endsAt) : null,
+        },
+        include: { plan: true },
+      });
+    });
+
+    return { membership };
+  }
+
   async paymentHistory(requesterId: string, centerId: string, filter: { userId?: string }) {
     const role = await this.access.requireCenterMember(requesterId, centerId);
     const userId = filter.userId;
@@ -91,4 +132,3 @@ export class MembershipsService {
     return { payments };
   }
 }
-

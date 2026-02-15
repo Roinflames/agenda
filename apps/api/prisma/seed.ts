@@ -9,7 +9,7 @@ function envOr(name: string, fallback: string) {
 }
 
 async function main() {
-  const centerName = envOr('SEED_CENTER_NAME', 'CentroFit Demo');
+  const centerName = envOr('SEED_CENTER_NAME', 'Felimor Pilates');
   const password = envOr('SEED_DEFAULT_PASSWORD', 'DevPassword123!');
   const passwordHash = await bcrypt.hash(password, 12);
 
@@ -106,14 +106,14 @@ async function main() {
 
   // Horarios recurrentes
   const scheduleData = [
-    { name: 'CrossFit AM', dayOfWeek: 1, startTime: '07:00', endTime: '08:00', capacity: 15 },
-    { name: 'CrossFit AM', dayOfWeek: 2, startTime: '07:00', endTime: '08:00', capacity: 15 },
-    { name: 'CrossFit AM', dayOfWeek: 3, startTime: '07:00', endTime: '08:00', capacity: 15 },
-    { name: 'CrossFit AM', dayOfWeek: 4, startTime: '07:00', endTime: '08:00', capacity: 15 },
-    { name: 'CrossFit AM', dayOfWeek: 5, startTime: '07:00', endTime: '08:00', capacity: 15 },
-    { name: 'Yoga', dayOfWeek: 2, startTime: '18:00', endTime: '19:00', capacity: 10 },
-    { name: 'Yoga', dayOfWeek: 4, startTime: '18:00', endTime: '19:00', capacity: 10 },
-    { name: 'Funcional', dayOfWeek: 6, startTime: '10:00', endTime: '11:00', capacity: 20 },
+    { name: 'Pilates con Felipe', dayOfWeek: 1, startTime: '07:00', endTime: '08:00', capacity: 15 },
+    { name: 'Pilates con Felipe', dayOfWeek: 2, startTime: '07:00', endTime: '08:00', capacity: 15 },
+    { name: 'Pilates con Felipe', dayOfWeek: 3, startTime: '07:00', endTime: '08:00', capacity: 15 },
+    { name: 'Pilates con Felipe', dayOfWeek: 4, startTime: '07:00', endTime: '08:00', capacity: 15 },
+    { name: 'Pilates con Felipe', dayOfWeek: 5, startTime: '07:00', endTime: '08:00', capacity: 15 },
+    { name: 'Pilates con Francisca', dayOfWeek: 2, startTime: '18:00', endTime: '19:00', capacity: 10 },
+    { name: 'Pilates con Francisca', dayOfWeek: 4, startTime: '18:00', endTime: '19:00', capacity: 10 },
+    { name: 'Pilates con Francisca', dayOfWeek: 6, startTime: '10:00', endTime: '11:00', capacity: 20 },
   ];
 
   for (const s of scheduleData) {
@@ -132,7 +132,7 @@ async function main() {
     },
   });
 
-  // Reserva de ejemplo: Juan en CrossFit mañana (próximo lunes)
+  // Reserva de ejemplo: Juan en Pilates con Felipe mañana (próximo lunes)
   const now = new Date();
   const daysUntilMonday = ((1 - now.getDay() + 7) % 7) || 7;
   const nextMonday = new Date(now);
@@ -146,7 +146,7 @@ async function main() {
       centerId: center.id,
       userId: member.id,
       kind: 'CLASS',
-      title: 'CrossFit AM',
+      title: 'Pilates con Felipe',
       startAt: nextMonday,
       endAt: nextMondayEnd,
       status: 'CONFIRMED',

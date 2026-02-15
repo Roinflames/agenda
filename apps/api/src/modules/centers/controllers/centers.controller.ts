@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { JwtUser } from '../../auth/types/jwt-user.type';
 import { CreateCenterDto } from '../dto/create-center.dto';
+import { UpdateCenterServiceStatusDto } from '../dto/update-center-service-status.dto';
 import { UpdateCenterDto } from '../dto/update-center.dto';
 import { CentersService } from '../services/centers.service';
 
@@ -24,6 +25,11 @@ export class CentersController {
     return this.centers.create(user.userId, dto);
   }
 
+  @Get('clientes/suspension')
+  async listClientCentersForSuspension(@CurrentUser() user: JwtUser) {
+    return this.centers.listClientCentersForSuspension(user.userId);
+  }
+
   @Get(':id')
   async get(@CurrentUser() user: JwtUser, @Param('id') id: string) {
     return this.centers.get(user.userId, id);
@@ -39,6 +45,15 @@ export class CentersController {
     return this.centers.remove(user.userId, id);
   }
 
+  @Put(':id/service-status')
+  async updateServiceStatus(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateCenterServiceStatusDto,
+  ) {
+    return this.centers.updateServiceStatus(user.userId, id, dto);
+  }
+
   @Get(':id/dashboard')
   async dashboard(
     @CurrentUser() user: JwtUser,
@@ -49,4 +64,3 @@ export class CentersController {
     return this.centers.dashboard(user.userId, id, { from, to });
   }
 }
-

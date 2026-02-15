@@ -16,13 +16,14 @@ export class UsersService {
     await this.access.requireCenterRole(requesterId, centerId, ['OWNER', 'ADMIN', 'STAFF']);
     const users = await this.prisma.centerUser.findMany({
       where: { centerId },
-      include: { user: { select: { id: true, email: true, name: true, phone: true, createdAt: true } } },
+      include: { user: { select: { id: true, email: true, name: true, phone: true, avatarUrl: true, createdAt: true } } },
       orderBy: { createdAt: 'desc' },
     });
     return {
-      users: users.map((cu: { user: { id: string; email: string; name: string; phone: string | null }; role: string }) => ({
+      users: users.map((cu: { user: { id: string; email: string; name: string; phone: string | null; avatarUrl: string | null }; role: string; status: string }) => ({
         ...cu.user,
         role: cu.role,
+        status: cu.status,
       })),
     };
   }
@@ -34,21 +35,37 @@ export class UsersService {
     const email = dto.email.toLowerCase();
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) {
+      if (dto.name || dto.phone || dto.avatarUrl !== undefined) {
+        await this.prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            name: dto.name || existing.name,
+            phone: dto.phone ?? undefined,
+            avatarUrl: dto.avatarUrl === undefined ? undefined : (dto.avatarUrl.trim() ? dto.avatarUrl.trim() : null),
+          },
+        });
+      }
       // If already exists, just add to center
       const cu = await this.prisma.centerUser.upsert({
         where: { centerId_userId: { centerId: dto.centerId, userId: existing.id } },
-        create: { centerId: dto.centerId, userId: existing.id, role: dto.role ?? 'MEMBER' },
-        update: { role: dto.role ?? 'MEMBER' },
+        create: { centerId: dto.centerId, userId: existing.id, role: dto.role ?? 'MEMBER', status: dto.status ?? 'ACTIVO' },
+        update: { role: dto.role ?? 'MEMBER', status: dto.status ?? 'ACTIVO' },
       });
       return { userId: existing.id, centerUserId: cu.id };
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.user.create({
-      data: { email, passwordHash, name: dto.name, phone: dto.phone },
+      data: {
+        email,
+        passwordHash,
+        name: dto.name,
+        phone: dto.phone,
+        avatarUrl: dto.avatarUrl?.trim() ? dto.avatarUrl.trim() : null,
+      },
     });
     const cu = await this.prisma.centerUser.create({
-      data: { centerId: dto.centerId, userId: user.id, role: dto.role ?? 'MEMBER' },
+      data: { centerId: dto.centerId, userId: user.id, role: dto.role ?? 'MEMBER', status: dto.status ?? 'ACTIVO' },
     });
 
     return { userId: user.id, centerUserId: cu.id };
@@ -60,14 +77,18 @@ export class UsersService {
 
     const user = await this.prisma.user.update({
       where: { id: targetUserId },
-      data: { name: dto.name, phone: dto.phone },
-      select: { id: true, email: true, name: true, phone: true },
+      data: {
+        name: dto.name,
+        phone: dto.phone,
+        avatarUrl: dto.avatarUrl === undefined ? undefined : (dto.avatarUrl.trim() ? dto.avatarUrl.trim() : null),
+      },
+      select: { id: true, email: true, name: true, phone: true, avatarUrl: true },
     });
 
-    if (dto.role) {
+    if (dto.role || dto.status) {
       await this.prisma.centerUser.update({
         where: { centerId_userId: { centerId: dto.centerId, userId: targetUserId } },
-        data: { role: dto.role },
+        data: { role: dto.role, status: dto.status },
       });
     }
 

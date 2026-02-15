@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { JwtUser } from '../../auth/types/jwt-user.type';
 import { AssignMembershipDto } from '../dto/assign-membership.dto';
+import { ChangeOwnMembershipDto } from '../dto/change-own-membership.dto';
 import { MembershipsService } from '../services/memberships.service';
 
 @ApiTags('membresias')
@@ -18,6 +19,16 @@ export class MembershipsController {
     return this.memberships.assign(me.userId, dto);
   }
 
+  @Get('actual')
+  async current(@CurrentUser() me: JwtUser, @Query('centerId') centerId: string) {
+    return this.memberships.currentForMe(me.userId, centerId);
+  }
+
+  @Post('cambiar-plan')
+  async changeOwnPlan(@CurrentUser() me: JwtUser, @Body() dto: ChangeOwnMembershipDto) {
+    return this.memberships.changeOwnPlan(me.userId, dto);
+  }
+
   @Get('pagos')
   async paymentHistory(
     @CurrentUser() me: JwtUser,
@@ -27,4 +38,3 @@ export class MembershipsController {
     return this.memberships.paymentHistory(me.userId, centerId, { userId });
   }
 }
-

@@ -24,6 +24,11 @@ export class CreateUserDto {
   @IsString()
   phone?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
   @ApiProperty({ required: false, enum: ['OWNER', 'ADMIN', 'STAFF', 'MEMBER'], default: 'MEMBER' })
   @IsOptional()
   @IsIn(['OWNER', 'ADMIN', 'STAFF', 'MEMBER'])
@@ -34,4 +39,3 @@ export class CreateUserDto {
   @IsIn(['ACTIVO', 'CONGELADO', 'SUSPENDIDO', 'PRUEBA'])
   status?: 'ACTIVO' | 'CONGELADO' | 'SUSPENDIDO' | 'PRUEBA';
 }
-

@@ -1,5 +1,6 @@
 {
   "name": "boxmagic-saas",
+  "version": "0.5.1",
   "private": true,
   "workspaces": [
     "apps/*",

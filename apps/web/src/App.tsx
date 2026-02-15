@@ -11,6 +11,7 @@ import Reports from './routes/Reports';
 import Schedules from './routes/Schedules';
 import TimeBlocks from './routes/TimeBlocks';
 import Notifications from './routes/Notifications';
+import Profile from './routes/Profile';
 
 function RequireNonMember({ children }: { children: JSX.Element }) {
   const role = getActiveCenter(getSession())?.role ?? 'MEMBER';
@@ -33,11 +34,12 @@ export default function App() {
           <Route path="/app" element={<AppHome />} />
           <Route path="/app/users" element={<RequireNonMember><Users /></RequireNonMember>} />
           <Route path="/app/reservations" element={<Reservations />} />
+          <Route path="/app/profile" element={<Profile />} />
           <Route path="/app/memberships" element={<Memberships />} />
           <Route path="/app/reports" element={<RequireNonMember><Reports /></RequireNonMember>} />
-          <Route path="/app/schedules" element={<Schedules />} />
-          <Route path="/app/time-blocks" element={<TimeBlocks />} />
-          <Route path="/app/notifications" element={<Notifications />} />
+          <Route path="/app/schedules" element={<RequireNonMember><Schedules /></RequireNonMember>} />
+          <Route path="/app/time-blocks" element={<RequireNonMember><TimeBlocks /></RequireNonMember>} />
+          <Route path="/app/notifications" element={<RequireNonMember><Notifications /></RequireNonMember>} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to="/app" replace />} />

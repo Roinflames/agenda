@@ -307,6 +307,18 @@ export default function Reservations() {
     return reservationMap.get(key) ?? [];
   }
 
+  function getReservationClassLabel(r: Reservation) {
+    const fromSchedule = schedules.find((s) => s.id === r.scheduleId)?.name;
+    const raw = (fromSchedule || r.title || 'Clase').trim();
+    return raw.replace(/^disponible\s+/i, '').trim() || 'Clase';
+  }
+
+  function getReservationSummary(r: Reservation) {
+    const studentName = userMap.get(r.userId)?.name ?? 'Alumno';
+    const classLabel = getReservationClassLabel(r);
+    return `Alumno ${studentName} en clase: ${classLabel}`;
+  }
+
   async function bookFromDay(schedule: Schedule, date: Date) {
     setDayModalSavingScheduleId(schedule.id);
     try {
@@ -573,9 +585,9 @@ export default function Reservations() {
                 <div key={r.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <div className="text-sm font-semibold text-slate-800">{r.title}</div>
+                      <div className="text-sm font-semibold text-slate-800">{getReservationSummary(r)}</div>
                       <div className="text-xs text-slate-500">{timeRange(r.startAt, r.endAt)}</div>
-                      <div className="text-xs text-slate-400">{userMap.get(r.userId)?.name ?? ''}</div>
+                      <div className="text-xs text-slate-400">Reserva: {getReservationClassLabel(r)}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span

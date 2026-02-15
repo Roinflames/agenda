@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { getActiveCenter, getSession, setSession } from '../lib/auth';
+import { getStoredTheme, initTheme, setTheme, toggleTheme, type UiTheme } from '../lib/theme';
 
 function navClass(active: boolean) {
   return `app-nav-link ${active ? 'app-nav-link-active' : ''}`;
@@ -10,12 +11,17 @@ function navClass(active: boolean) {
 export default function Shell() {
   const nav = useNavigate();
   const [session, setLocalSession] = useState(getSession());
+  const [theme, setThemeState] = useState<UiTheme>(getStoredTheme());
   const activeCenter = useMemo(() => getActiveCenter(session), [session]);
   const role = activeCenter?.role ?? 'MEMBER';
   const isMember = role === 'MEMBER';
   const roleLabel =
     role === 'OWNER' ? 'OWNER' : role === 'ADMIN' ? 'ADMIN' : role === 'STAFF' ? 'STAFF' : 'MEMBER';
   const isSuspended = activeCenter?.serviceStatus === 'SUSPENDED';
+
+  useEffect(() => {
+    initTheme();
+  }, []);
 
   useEffect(() => {
     api
@@ -48,6 +54,17 @@ export default function Shell() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+              onClick={() => {
+                const next = toggleTheme(theme);
+                setTheme(next);
+                setThemeState(next);
+              }}
+              title="Alternar tema de fondo"
+            >
+              Tema: {theme === 'verde' ? 'Verde' : 'Corporativa'}
+            </button>
             {centers.length > 1 ? (
               <select
                 className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700"
@@ -99,23 +116,32 @@ export default function Shell() {
               <NavLink to="/app/reservations" className={({ isActive }) => navClass(isActive)}>
                 Reservas
               </NavLink>
+              <NavLink to="/app/profile" className={({ isActive }) => navClass(isActive)}>
+                Perfil
+              </NavLink>
               <NavLink to="/app/memberships" className={({ isActive }) => navClass(isActive)}>
                 Membresias
               </NavLink>
-              <NavLink to="/app/schedules" className={({ isActive }) => navClass(isActive)}>
-                Horarios
-              </NavLink>
-              <NavLink to="/app/time-blocks" className={({ isActive }) => navClass(isActive)}>
-                Bloqueos
-              </NavLink>
+              {!isMember ? (
+                <NavLink to="/app/schedules" className={({ isActive }) => navClass(isActive)}>
+                  Horarios
+                </NavLink>
+              ) : null}
+              {!isMember ? (
+                <NavLink to="/app/time-blocks" className={({ isActive }) => navClass(isActive)}>
+                  Bloqueos
+                </NavLink>
+              ) : null}
               {!isMember ? (
                 <NavLink to="/app/reports" className={({ isActive }) => navClass(isActive)}>
                   Reportes
                 </NavLink>
               ) : null}
-              <NavLink to="/app/notifications" className={({ isActive }) => navClass(isActive)}>
-                Notificaciones
-              </NavLink>
+              {!isMember ? (
+                <NavLink to="/app/notifications" className={({ isActive }) => navClass(isActive)}>
+                  Notificaciones
+                </NavLink>
+              ) : null}
             </div>
           </nav>
         ) : null}

@@ -41,4 +41,15 @@ export class ReportsController {
   ) {
     return this.reports.agenda(me.userId, centerId, { from, to });
   }
+
+  @Get('negocio')
+  async negocio(
+    @CurrentUser() me: JwtUser,
+    @Query('centerId') centerId: string,
+    @Query('year') year?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reports.business(me.userId, centerId, { year, from, to });
+  }
 }

@@ -46,6 +46,24 @@ Credencial inicial por migracion (recovery):
 
 API Docs: `http://localhost:3001/docs`
 
+## Reportes de negocio
+- Endpoint API: `GET /reportes/negocio?centerId=<CENTER_ID>&year=<YYYY>`
+- Incluye:
+  - Ingresos mensuales del anio seleccionado vs anio anterior.
+  - Ingreso anual y variacion porcentual YoY.
+  - Conteo de alumnos por estado (`ACTIVO`, `CONGELADO`, `SUSPENDIDO`, `PRUEBA`) e inactivos agregados.
+    - La metrica de alumnos considera solo usuarios con rol `MEMBER`.
+  - Evolucion mensual de alumnos activos/inactivos basada en reservas confirmadas.
+  - Termino de plan por alumno (`endsAt`, dias restantes, plan y estado del alumno), con resumen de:
+    - vencidos
+    - vencen en 7 dias
+    - vencen en 30 dias
+    - sin fecha de termino
+- UI:
+  - Vista `Reportes` en `apps/web/src/routes/Reports.tsx` consume `api.reportsBusiness(...)`.
+- Nota:
+  - No existe historial temporal del estado administrativo del alumno; por eso la evolucion mensual de activos/inactivos se calcula por actividad real (reservas confirmadas) y no por historial de cambios de estado.
+
 ## Deploy Render
 Ver `infra/render/README.md` y `render.yaml`.
 

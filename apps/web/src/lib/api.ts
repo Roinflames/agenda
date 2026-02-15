@@ -141,6 +141,11 @@ export const api = {
     request<{ membership: any | null }>(`/membresias/actual?centerId=${encodeURIComponent(centerId)}`),
   changeMyMembershipPlan: (payload: { centerId: string; planId: string; endsAt?: string }) =>
     request<{ membership: any }>('/membresias/cambiar-plan', { method: 'POST', body: JSON.stringify(payload) }),
+  membershipPayments: (centerId: string, userId?: string) => {
+    let url = `/membresias/pagos?centerId=${encodeURIComponent(centerId)}`;
+    if (userId) url += `&userId=${encodeURIComponent(userId)}`;
+    return request<{ payments: any[] }>(url);
+  },
 
   reportsIncome: (centerId: string, from?: string, to?: string) => {
     let url = `/reportes/ingresos?centerId=${encodeURIComponent(centerId)}`;
@@ -156,6 +161,13 @@ export const api = {
   },
   reportsAgenda: (centerId: string, from?: string, to?: string) => {
     let url = `/reportes/agenda?centerId=${encodeURIComponent(centerId)}`;
+    if (from) url += `&from=${encodeURIComponent(from)}`;
+    if (to) url += `&to=${encodeURIComponent(to)}`;
+    return request<any>(url);
+  },
+  reportsBusiness: (centerId: string, year?: number, from?: string, to?: string) => {
+    let url = `/reportes/negocio?centerId=${encodeURIComponent(centerId)}`;
+    if (year) url += `&year=${encodeURIComponent(String(year))}`;
     if (from) url += `&from=${encodeURIComponent(from)}`;
     if (to) url += `&to=${encodeURIComponent(to)}`;
     return request<any>(url);

@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: starter
     region: oregon
-    buildCommand: npm ci && npm run prisma:generate -w apps/api && npm run build -w apps/api
+    buildCommand: npm ci && npm run prisma:generate -w apps/api && npm run prisma:migrate:deploy -w apps/api && npm run build -w apps/api
     startCommand: node apps/api/dist/src/main.js
     healthCheckPath: /health
     envVars:
@@ -37,4 +37,3 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         value: https://boxmagic-api.onrender.com
-

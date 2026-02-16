@@ -321,6 +321,7 @@ export default function Reservations() {
 
   async function bookFromDay(schedule: Schedule, date: Date) {
     setDayModalSavingScheduleId(schedule.id);
+    const targetUserId = currentCenterRole === 'MEMBER' ? currentUserId : (dayModalUserId || undefined);
     try {
       const [sh, sm] = schedule.startTime.split(':').map(Number);
       const [eh, em] = schedule.endTime.split(':').map(Number);
@@ -331,7 +332,7 @@ export default function Reservations() {
 
       await api.createReservation({
         centerId,
-        userId: currentCenterRole === 'MEMBER' ? undefined : (dayModalUserId || undefined),
+        userId: currentCenterRole === 'MEMBER' ? undefined : targetUserId,
         kind: 'CLASS',
         title: dayModalTitle.trim() || schedule.name,
         scheduleId: schedule.id,
@@ -344,6 +345,17 @@ export default function Reservations() {
       setDayModalError(null);
       await loadData();
     } catch (e: any) {
+      const message = String(e?.message ?? '');
+      if (/ya tienes una reserva para ese horario/i.test(message)) {
+        try {
+          const refreshed = await api.reservations(centerId, targetUserId);
+          setReservations(refreshed.reservations ?? []);
+        } catch {
+          await loadData();
+        }
+        setDayModalError(null);
+        return;
+      }
       setDayModalError(e.message ?? 'No se pudo agendar');
     } finally {
       setDayModalSavingScheduleId(null);
@@ -359,6 +371,19 @@ export default function Reservations() {
       setError(e.message ?? 'Error cancelando reserva');
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function cancelReservationFromDay(resId: string, scheduleId: string) {
+    setDayModalSavingScheduleId(scheduleId);
+    try {
+      await api.updateReservation(resId, { status: 'CANCELED' });
+      setDayModalError(null);
+      await loadData();
+    } catch (e: any) {
+      setDayModalError(e.message ?? 'No se pudo cancelar');
+    } finally {
+      setDayModalSavingScheduleId(null);
     }
   }
 
@@ -862,9 +887,20 @@ export default function Reservations() {
                   const slotRes = getSlotReservations(schedule, selectedDayModal);
                   const blocked = isBlockedSlot(schedule, selectedDayModal, timeBlocks);
                   const full = slotRes.length >= schedule.capacity;
-                  const canBook = !blocked && !full;
-                  const actionLabel = blocked ? 'Bloqueado' : full ? 'Lleno' : dayModalSavingScheduleId === schedule.id ? 'Agendando...' : 'Agendar';
-                  const actionClass = canBook
+                  const targetUserId = currentCenterRole === 'MEMBER' ? currentUserId : dayModalUserId;
+                  const myReservation = targetUserId ? slotRes.find((r) => r.userId === targetUserId) : undefined;
+                  const alreadyBooked = Boolean(myReservation);
+                  const canBook = !blocked && !full && !alreadyBooked;
+                  const canCancel = Boolean(myReservation);
+                  const canAct = canBook || canCancel;
+                  const isSaving = dayModalSavingScheduleId === schedule.id;
+                  const actionLabel = isSaving
+                    ? alreadyBooked ? 'Cancelando...' : 'Agendando...'
+                    : alreadyBooked ? 'Cancelar'
+                    : blocked ? 'Bloqueado'
+                    : full ? 'Lleno'
+                    : 'Agendar';
+                  const actionClass = canAct
                     ? 'app-btn-sm'
                     : 'rounded-lg border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 cursor-not-allowed';
 
@@ -882,6 +918,8 @@ export default function Reservations() {
                         </span>
                         {blocked ? (
                           <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">Bloqueado</span>
+                        ) : alreadyBooked ? (
+                          <span className="rounded-full bg-sky-100 px-2 py-1 text-xs font-semibold text-sky-700">Agendado</span>
                         ) : full ? (
                           <span className="rounded-full bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700">Lleno</span>
                         ) : (
@@ -889,8 +927,14 @@ export default function Reservations() {
                         )}
                         <button
                           className={actionClass}
-                          disabled={!canBook || dayModalSavingScheduleId === schedule.id}
-                          onClick={() => bookFromDay(schedule, selectedDayModal)}
+                          disabled={!canAct || isSaving}
+                          onClick={() => {
+                            if (myReservation) {
+                              cancelReservationFromDay(myReservation.id, schedule.id);
+                              return;
+                            }
+                            bookFromDay(schedule, selectedDayModal);
+                          }}
                         >
                           {actionLabel}
                         </button>

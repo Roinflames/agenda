@@ -29,8 +29,8 @@ export class SchedulesService {
     if (end - start !== 60) {
       throw new BadRequestException('Cada bloque de clase debe durar exactamente 1 hora');
     }
-    if (start < 18 * 60 || end > 21 * 60) {
-      throw new BadRequestException('Horario permitido: 18:00 a 21:00');
+    if (start < 9 * 60 || end > 22 * 60) {
+      throw new BadRequestException('Horario permitido: 09:00 a 22:00');
     }
 
     const cap = capacity ?? 20;
@@ -72,10 +72,17 @@ export class SchedulesService {
     if (!existing) throw new NotFoundException('Horario no encontrado');
 
     await this.access.requireCenterRole(requesterId, existing.centerId, ['OWNER', 'ADMIN', 'STAFF']);
-    const nextStart = dto.startTime ?? existing.startTime;
-    const nextEnd = dto.endTime ?? existing.endTime;
-    const nextCapacity = dto.capacity ?? existing.capacity;
-    this.validateBusinessRules(nextStart, nextEnd, nextCapacity);
+    const updatesBusinessRules =
+      dto.startTime !== undefined ||
+      dto.endTime !== undefined ||
+      dto.capacity !== undefined;
+
+    if (updatesBusinessRules) {
+      const nextStart = dto.startTime ?? existing.startTime;
+      const nextEnd = dto.endTime ?? existing.endTime;
+      const nextCapacity = dto.capacity ?? existing.capacity;
+      this.validateBusinessRules(nextStart, nextEnd, nextCapacity);
+    }
 
     const schedule = await this.prisma.classSchedule.update({
       where: { id: scheduleId },

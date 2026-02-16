@@ -70,6 +70,9 @@ Ver `infra/render/README.md` y `render.yaml`.
 ## Documento SRS (IEEE 830)
 - Base de requisitos: `docs/SRS_IEEE830.md`
 
+## Matriz de permisos (RBAC)
+- Documento vigente: `docs/RBAC_PERMISOS.md`
+
 ## Etapas de desarrollo (ciclo de vida)
 ### Etapa 1 - Descubrimiento y alcance
 - Objetivo: alinear objetivos de negocio, alcance MVP y restricciones.
@@ -101,4 +104,5 @@ Ver `infra/render/README.md` y `render.yaml`.
 - `v0.3.0`: Reportes y ajustes de UX operativa.
 - `v0.4.0`: Agenda operativa (horarios, bloqueos, calendario semanal) + reportes avanzados de agenda.
 - `v0.5.0`: Notificaciones operativas (email/push) con historial y envío manual desde UI.
+- `v0.5.9`: Ajustes operativos de agenda (bloques horarios 09:00-22:00, selector fijo de clase/profesor, estado agendado/cancelar y hardening de bloqueos/reservas).
 - `v1.0.0`: Cierre MVP validado con criterios de aceptacion.

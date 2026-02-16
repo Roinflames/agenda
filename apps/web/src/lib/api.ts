@@ -196,12 +196,12 @@ export const api = {
     let url = `/bloqueos?centerId=${encodeURIComponent(centerId)}`;
     if (from) url += `&from=${encodeURIComponent(from)}`;
     if (to) url += `&to=${encodeURIComponent(to)}`;
-    return request<{ timeBlocks: any[] }>(url);
+    return request<{ timeBlocks?: any[]; blocks?: any[] }>(url).then((r) => ({ timeBlocks: r.timeBlocks ?? r.blocks ?? [] }));
   },
   createTimeBlock: (payload: { centerId: string; name: string; startAt: string; endAt: string }) =>
-    request<{ timeBlock: any }>('/bloqueos', { method: 'POST', body: JSON.stringify(payload) }),
+    request<{ timeBlock?: any; block?: any }>('/bloqueos', { method: 'POST', body: JSON.stringify(payload) }).then((r) => ({ timeBlock: r.timeBlock ?? r.block })),
   updateTimeBlock: (id: string, payload: Record<string, any>) =>
-    request<{ timeBlock: any }>(`/bloqueos/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    request<{ timeBlock?: any; block?: any }>(`/bloqueos/${id}`, { method: 'PUT', body: JSON.stringify(payload) }).then((r) => ({ timeBlock: r.timeBlock ?? r.block })),
   deleteTimeBlock: (id: string) =>
     request<{ ok: boolean }>(`/bloqueos/${id}`, { method: 'DELETE' }),
 

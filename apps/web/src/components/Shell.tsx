@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { getActiveCenter, getSession, setSession } from '../lib/auth';
 import { getStoredTheme, initTheme, setTheme, toggleTheme, type UiTheme } from '../lib/theme';
@@ -10,6 +10,7 @@ function navClass(active: boolean) {
 
 export default function Shell() {
   const nav = useNavigate();
+  const location = useLocation();
   const [session, setLocalSession] = useState(getSession());
   const [theme, setThemeState] = useState<UiTheme>(getStoredTheme());
   const activeCenter = useMemo(() => getActiveCenter(session), [session]);
@@ -39,6 +40,14 @@ export default function Shell() {
   }, []);
 
   const centers = session?.centers ?? [];
+  const restrictedForMember = new Set([
+    '/app',
+    '/app/users',
+    '/app/reports',
+    '/app/schedules',
+    '/app/time-blocks',
+    '/app/notifications',
+  ]);
 
   return (
     <div className="min-h-screen">
@@ -49,7 +58,7 @@ export default function Shell() {
               CentroFit Admin
             </Link>
             <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-              UI v0.5.0
+              UI v0.5.9
             </span>
           </div>
 
@@ -72,10 +81,18 @@ export default function Shell() {
                 onChange={(e) => {
                   const current = getSession();
                   if (!current) return;
-                  const next = { ...current, activeCenterId: e.target.value };
+                  const nextCenterId = e.target.value;
+                  const nextRole = (current.centers ?? []).find((c) => c.id === nextCenterId)?.role ?? 'MEMBER';
+                  const currentPath = `${location.pathname}${location.search}${location.hash}`;
+                  const targetPath =
+                    nextRole === 'MEMBER' && restrictedForMember.has(location.pathname)
+                      ? '/app/reservations'
+                      : currentPath;
+
+                  const next = { ...current, activeCenterId: nextCenterId };
                   setSession(next);
                   setLocalSession(next);
-                  nav('/app');
+                  nav(targetPath, { replace: true });
                 }}
               >
                 {centers.map((c) => (
@@ -147,7 +164,7 @@ export default function Shell() {
         ) : null}
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main key={activeCenter?.id ?? 'no-center'} className="mx-auto max-w-6xl px-4 py-6">
         {isSuspended ? (
           <div className="mx-auto max-w-2xl rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center">
             <h2 className="text-xl font-bold text-rose-800">Servicio suspendido por falta de pago</h2>

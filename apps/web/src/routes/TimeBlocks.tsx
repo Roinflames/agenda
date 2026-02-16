@@ -51,7 +51,7 @@ export default function TimeBlocks() {
   async function loadBlocks() {
     if (!centerId) return;
     const r = await api.timeBlocks(centerId);
-    setBlocks(r.timeBlocks ?? []);
+    setBlocks((r as any).timeBlocks ?? (r as any).blocks ?? []);
   }
 
   useEffect(() => {

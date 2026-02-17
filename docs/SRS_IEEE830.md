@@ -1,6 +1,15 @@
 # Especificacion de Requisitos de Software (SRS)
 ## Formato IEEE 830
 
+**Version:** v1.0  
+**Fecha:** 2026-02-16  
+**Estado:** Vigente (MVP)
+
+## Control de cambios
+| Version | Fecha | Cambio |
+|---|---|---|
+| v1.0 | 2026-02-16 | Baseline del SRS para MVP (auth, centros, RBAC, usuarios, reservas, membresias, pagos, reportes). |
+
 ## 1. Introduccion
 ### 1.1 Proposito
 Definir los requisitos funcionales y no funcionales del sistema `CentroFit SaaS (MVP)`, orientado a la gestion de centros deportivos con foco en reservas, membresias, pagos y reportes operativos.

@@ -58,7 +58,7 @@ export default function Shell() {
               CentroFit Admin
             </Link>
             <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-              UI v0.5.9
+              UI v0.5.13
             </span>
           </div>
 
@@ -105,6 +105,14 @@ export default function Shell() {
             <span className="hidden text-xs text-slate-600 sm:inline">
               {session?.user?.email} · {roleLabel}
             </span>
+            <NavLink
+              to="/app/profile"
+              className={({ isActive }) =>
+                `rounded-lg border px-3 py-1.5 text-sm font-medium transition ${isActive ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`
+              }
+            >
+              Perfil
+            </NavLink>
             <button
               className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
               onClick={() => {
@@ -132,9 +140,6 @@ export default function Shell() {
               ) : null}
               <NavLink to="/app/reservations" className={({ isActive }) => navClass(isActive)}>
                 Reservas
-              </NavLink>
-              <NavLink to="/app/profile" className={({ isActive }) => navClass(isActive)}>
-                Perfil
               </NavLink>
               <NavLink to="/app/memberships" className={({ isActive }) => navClass(isActive)}>
                 Membresias

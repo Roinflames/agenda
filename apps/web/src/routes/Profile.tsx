@@ -38,10 +38,13 @@ export default function Profile() {
   const center = getActiveCenter(session);
   const centerId = center?.id ?? '';
   const userId = session?.user?.id ?? '';
+  const role = center?.role ?? 'MEMBER';
+  const isMember = role === 'MEMBER';
 
   const [me, setMe] = useState<any>(null);
   const [membership, setMembership] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [monthCursor, setMonthCursor] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -53,13 +56,19 @@ export default function Profile() {
     Promise.all([
       api.me(),
       api.currentMembership(centerId),
-      api.membershipPayments(centerId),
+      api.membershipPayments(centerId, isMember ? userId : undefined),
       api.reservations(centerId, userId),
+      isMember ? Promise.resolve({ users: [] as any[] }) : api.users(centerId),
     ])
-      .then(([meRes, mRes, pRes, rRes]) => {
+      .then(([meRes, mRes, pRes, rRes, uRes]) => {
         setMe(meRes.user ?? null);
         setMembership(mRes.membership ?? null);
-        setPayments((pRes.payments ?? []).slice(0, 10));
+        const incomingPayments = (pRes.payments ?? [])
+          .filter((p: any) => (isMember ? true : p.userId !== userId))
+          .filter((p: any) => (isMember ? true : p.status === 'PAID'))
+          .slice(0, 25);
+        setPayments(incomingPayments);
+        setUsers(uRes.users ?? []);
         const upcoming = (rRes.reservations ?? [])
           .filter((r: any) => r.status === 'CONFIRMED' && new Date(r.startAt).getTime() >= Date.now())
           .sort((a: any, b: any) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
@@ -76,7 +85,13 @@ export default function Profile() {
         }
       })
       .catch((e: any) => setError(e.message ?? 'Error cargando perfil'));
-  }, [centerId, userId]);
+  }, [centerId, userId, isMember]);
+
+  const userMap = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const u of users) map.set(u.id, u);
+    return map;
+  }, [users]);
 
   const nextClass = useMemo(() => reservations[0] ?? null, [reservations]);
   const calendarDays = useMemo(() => buildCalendarMatrix(monthCursor), [monthCursor]);
@@ -143,15 +158,22 @@ export default function Profile() {
       </div>
 
       <div className="app-card p-4">
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Historial de pagos (últimos 10)</h3>
+        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          {isMember ? 'Historial de pagos (últimos 10)' : 'Pagos recibidos (últimos 25)'}
+        </h3>
         {payments.length === 0 ? (
-          <div className="text-sm text-slate-500">Sin pagos registrados.</div>
+          <div className="text-sm text-slate-500">{isMember ? 'Sin pagos registrados.' : 'Sin pagos recibidos registrados.'}</div>
         ) : (
           <div className="space-y-2">
             {payments.map((p) => (
               <div key={p.id} className="flex flex-wrap items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
                 <div>
                   <div className="font-medium text-slate-900">{money(p.amountCents ?? 0, p.currency ?? 'clp')}</div>
+                  {!isMember ? (
+                    <div className="text-xs text-slate-600">
+                      {userMap.get(p.userId)?.name ?? 'Alumno'} · {userMap.get(p.userId)?.email ?? p.userId}
+                    </div>
+                  ) : null}
                   <div className="text-xs text-slate-500">{new Date(p.createdAt).toLocaleString('es-CL')}</div>
                 </div>
                 <span className={`rounded-full px-2 py-1 text-xs font-semibold ${p.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>

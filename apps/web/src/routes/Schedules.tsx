@@ -45,7 +45,7 @@ function buildScheduleName(className: string, instructorName: string) {
 }
 
 const emptyForm = {
-  name: '',
+  name: buildScheduleName('Pilates', 'Felipe'),
   description: '',
   dayOfWeek: 1,
   startTime: '09:00',
@@ -63,6 +63,7 @@ export default function Schedules() {
   const [className, setClassName] = useState<string>('Pilates');
   const [instructorName, setInstructorName] = useState<string>('Felipe');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [weekStart, setWeekStart] = useState<'monday' | 'sunday'>('monday');
 
   const classOptions = CLASS_OPTIONS;
   const instructorOptions = INSTRUCTOR_OPTIONS;
@@ -182,6 +183,11 @@ export default function Schedules() {
     return map;
   }, [schedules]);
 
+  const orderedDayIndexes = useMemo(
+    () => (weekStart === 'monday' ? [1, 2, 3, 4, 5, 6, 0] : [0, 1, 2, 3, 4, 5, 6]),
+    [weekStart],
+  );
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-slate-900">Horarios de clases</h2>
@@ -191,11 +197,20 @@ export default function Schedules() {
         <div className="app-card p-4">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Horas semanales</h3>
-            <span className="text-xs text-slate-400">Tipo Calendly</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">Tipo Calendly</span>
+              <button
+                className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                onClick={() => setWeekStart((prev) => (prev === 'monday' ? 'sunday' : 'monday'))}
+              >
+                {weekStart === 'monday' ? 'Lunes primero' : 'Domingo primero'}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1.5">
-            {DAY_NAMES.map((day, dayIndex) => {
+            {orderedDayIndexes.map((dayIndex) => {
+              const day = DAY_NAMES[dayIndex];
               const slots = slotsByDay.get(dayIndex) ?? [];
               return (
                 <div key={day} className="rounded-xl border border-slate-200 bg-white px-3 py-2">
@@ -256,8 +271,8 @@ export default function Schedules() {
 
           <div className="space-y-2.5">
             <select className="app-input" value={form.dayOfWeek} onChange={(e) => setForm({ ...form, dayOfWeek: Number(e.target.value) })}>
-              {DAY_NAMES.map((name, i) => (
-                <option key={i} value={i}>{name}</option>
+              {orderedDayIndexes.map((dayIndex) => (
+                <option key={dayIndex} value={dayIndex}>{DAY_NAMES[dayIndex]}</option>
               ))}
             </select>
 

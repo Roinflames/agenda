@@ -23,6 +23,7 @@
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down -v",
     "db:migrate": "npm run prisma:migrate -w apps/api",
-    "db:seed": "npm run prisma:seed -w apps/api"
+    "db:seed": "npm run prisma:seed -w apps/api",
+    "demo:check-reports": "node scripts/check-reports-demo.mjs"
   }
 }
